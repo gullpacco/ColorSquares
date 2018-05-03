@@ -25,6 +25,7 @@ namespace TileMadness
         [Header("Sections")]
         [SerializeField]
         public LevelSection[] sections;
+        public TutorialLevel[] tutorials;
         private LevelSection currentSection;
         private int currentSectionIndex;
         private List<Color> defaultAllowedColors = new List<Color> { Color.White, Color.Black, Color.Green, Color.Red, Color.Blue };
@@ -37,6 +38,7 @@ namespace TileMadness
         private Color upBackgroundColor = Color.None;
         private Color downBackgroundColor = Color.None;
         private int currentValidTiles = 0;
+        bool tutorialDone = false;
 
         private int[] defaultTileIndex = new int[] { -1, -1, -1 };
 
@@ -49,8 +51,19 @@ namespace TileMadness
             public bool verticalSplit;
             public bool blueTile;
             public Color[] allowedBackgroundColors;
+            public int tutorialIndex;
         }
 
+        [Serializable]
+        public struct TutorialLevel
+        {
+            public BackGroundState backgroundState;
+            public Color[] tileColors;
+            public Color[] backGroundColors;
+            public string tutorialText;
+            public Color tutorialBackgroundColor;
+            public Color tutorialContinueColor;
+        }
 
 
         public BackGroundState BackgroundState
@@ -105,20 +118,8 @@ namespace TileMadness
         private void Awake()
         {
             instance = this;
+            //currentSection = sections[0];
         }
-
-
-        // Use this for initialization
-        void Start()
-        {
-
-        }
-
-        public void ForceSpawnTileset()
-        {
-
-        }
-
         public void ResetTiles()
         {
             for (int i = 0; i < tiles.Length; i++)
@@ -132,10 +133,24 @@ namespace TileMadness
             currentValidTiles = 0;
             ResetTiles();
             ResetBackgroundColors();
-            CheckSectionIncrease();
-            SetBackgroundState();
-            SetBackgrounds();
-            SpawnTiles();
+            if (!tutorialDone)
+            {
+                tutorialDone = true;
+                int tutorialIndex = currentSection.tutorialIndex;
+                TutorialLevel currentTutorial = tutorials[tutorialIndex];
+                backGroundState = currentTutorial.backgroundState;
+                SetBackgrounds(currentTutorial.backGroundColors);
+                SpawnTiles(currentTutorial.tileColors);
+                GUIManager.instance.ShowTutorial(currentTutorial.tutorialText, currentTutorial.tutorialBackgroundColor, currentTutorial.tutorialContinueColor);
+
+            }
+            else
+            {
+                CheckSectionIncrease();
+                SetBackgroundState();
+                SetBackgrounds();
+                SpawnTiles();
+            }
             return currentValidTiles;
         }
 
@@ -146,6 +161,10 @@ namespace TileMadness
                 if (GameManager.Instance.CurrentLevel > sections[currentSectionIndex + 1].minLevel)
                 {
                     currentSectionIndex++;
+                    if (sections[currentSectionIndex].tutorialIndex != -1)
+                    {
+                        tutorialDone = false;
+                    }
                 }
             }
             currentSection = sections[currentSectionIndex];
@@ -225,9 +244,16 @@ namespace TileMadness
             }
         }
 
-        void SetBackgrounds()
+        void SetBackgrounds(Color[] mandatoryColors = null)
         {
-            allowedColors = new List<Color>(currentSection.allowedBackgroundColors);
+            if (mandatoryColors == null)
+            {
+                allowedColors = new List<Color>(currentSection.allowedBackgroundColors);
+            }
+            else
+            {
+                allowedColors = new List<Color>(mandatoryColors);
+            }
             Color firstColor;
             switch (backGroundState)
             {
@@ -258,21 +284,30 @@ namespace TileMadness
             SetBackground(ElementPostion.Down, Color.None);
         }
 
-        void SpawnTiles()
+        void SpawnTiles(Color[] mandatoryColors = null)
         {
             int[] spawnedTilesIndex = defaultTileIndex;
             Color[] tileColors = new Color[currentSection.tileNumber];
             List<Color> allowedTileColors;
             int tilesForSectionOne = SetTilesForBackgroundOne();
-            for (int tilesToSpawn = 0; tilesToSpawn < currentSection.tileNumber; tilesToSpawn++)
+            for (int tileToSpawn = 0; tileToSpawn < currentSection.tileNumber; tileToSpawn++)
             {
                 int tileIndex = -1;
                 bool allowed = false;
-                allowedTileColors = new List<Color>( defaultAllowedColors);
-                if (!currentSection.blueTile)
+                if (mandatoryColors == null || mandatoryColors.Length < tileToSpawn + 1)
                 {
-                    allowedTileColors.Remove(Color.Blue);
+                    allowedTileColors = new List<Color>(defaultAllowedColors);
+                    if (!currentSection.blueTile)
+                    {
+                        allowedTileColors.Remove(Color.Blue);
+                    }
                 }
+                else
+                {
+                    allowedTileColors = new List<Color>();
+                    allowedTileColors.Add(mandatoryColors[tileToSpawn]);
+                }
+
                 switch (backGroundState)
                 {
                     case BackGroundState.Full:
@@ -288,17 +323,17 @@ namespace TileMadness
                                 }
                             }
                         }
-                        spawnedTilesIndex[tilesToSpawn] = tileIndex;
+                        spawnedTilesIndex[tileToSpawn] = tileIndex;
                         allowedTileColors = GetAllowedColorsOnBackground(FullBackgroundColor, allowedTileColors);
-                        tileColors[tilesToSpawn] = SetColor(allowedTileColors);
-                        CheckIncreaseValidTiles(tileColors[tilesToSpawn], fullBackgroundColor);
+                        tileColors[tileToSpawn] = SetColor(allowedTileColors);
+                        CheckIncreaseValidTiles(tileColors[tileToSpawn], fullBackgroundColor);
                         break;
                     case BackGroundState.HorizontalSplit:
                         while (!allowed)
                         {
                             allowed = true;
                             tileIndex = UnityEngine.Random.Range(0, tiles.Length / 2);
-                            if (tilesToSpawn < tilesForSectionOne)
+                            if (tileToSpawn < tilesForSectionOne)
                             {
                                 if (tileIndex > 1)
                                 {
@@ -359,18 +394,18 @@ namespace TileMadness
                                 }
                             }
                         }
-                        spawnedTilesIndex[tilesToSpawn] = tileIndex;
-                        if (tilesToSpawn < tilesForSectionOne)
+                        spawnedTilesIndex[tileToSpawn] = tileIndex;
+                        if (tileToSpawn < tilesForSectionOne)
                         {
                             allowedTileColors = GetAllowedColorsOnBackground(LeftBackgroundColor, allowedTileColors);
-                            tileColors[tilesToSpawn] = SetColor(allowedTileColors);
-                            CheckIncreaseValidTiles(tileColors[tilesToSpawn], LeftBackgroundColor);
+                            tileColors[tileToSpawn] = SetColor(allowedTileColors);
+                            CheckIncreaseValidTiles(tileColors[tileToSpawn], LeftBackgroundColor);
                         }
                         else
                         {
                             allowedTileColors = GetAllowedColorsOnBackground(RightBackgroundColor, allowedTileColors);
-                            tileColors[tilesToSpawn] = SetColor(allowedTileColors);
-                            CheckIncreaseValidTiles(tileColors[tilesToSpawn], RightBackgroundColor);
+                            tileColors[tileToSpawn] = SetColor(allowedTileColors);
+                            CheckIncreaseValidTiles(tileColors[tileToSpawn], RightBackgroundColor);
                         }
                         break;
                     case BackGroundState.VerticalSplit:
@@ -378,7 +413,7 @@ namespace TileMadness
                         {
                             allowed = true;
                             tileIndex = UnityEngine.Random.Range(0, tiles.Length / 2);
-                            if (tilesToSpawn >= tilesForSectionOne)
+                            if (tileToSpawn >= tilesForSectionOne)
                             {
                                 tileIndex += tiles.Length / 2;
                             }
@@ -390,18 +425,18 @@ namespace TileMadness
                                 }
                             }
                         }
-                        spawnedTilesIndex[tilesToSpawn] = tileIndex;
-                        if (tilesToSpawn < tilesForSectionOne)
+                        spawnedTilesIndex[tileToSpawn] = tileIndex;
+                        if (tileToSpawn < tilesForSectionOne)
                         {
                             allowedTileColors = GetAllowedColorsOnBackground(UpBackgroundColor, allowedTileColors);
-                            tileColors[tilesToSpawn] = SetColor(allowedTileColors);
-                            CheckIncreaseValidTiles(tileColors[tilesToSpawn], UpBackgroundColor);
+                            tileColors[tileToSpawn] = SetColor(allowedTileColors);
+                            CheckIncreaseValidTiles(tileColors[tileToSpawn], UpBackgroundColor);
                         }
                         else
                         {
                             allowedTileColors = GetAllowedColorsOnBackground(DownBackgroundColor, allowedTileColors);
-                            tileColors[tilesToSpawn] = SetColor(allowedTileColors);
-                            CheckIncreaseValidTiles(tileColors[tilesToSpawn], DownBackgroundColor);
+                            tileColors[tileToSpawn] = SetColor(allowedTileColors);
+                            CheckIncreaseValidTiles(tileColors[tileToSpawn], DownBackgroundColor);
                         }
                         break;
                 }

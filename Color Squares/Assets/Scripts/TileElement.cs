@@ -42,7 +42,7 @@ namespace TileMadness
         public void Spawn(Color newColor)
         {
             color = newColor;
-            spriteRenderer.sprite = TileManager.Instance.tileSprites[(int)Color];
+            spriteRenderer.sprite = TileManager.Instance.tileSprites[(int)color];
         }
 
         public void DeSpawn()

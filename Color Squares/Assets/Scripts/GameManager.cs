@@ -15,9 +15,6 @@ namespace TileMadness
         private static GameManager instance;
         private float allowedTime = 2f;
         private float currentTime;
-        [Header("UI Elements")]
-        public Slider timeSlider;
-        public Text levelText;
 
         public static GameManager Instance
         {
@@ -42,20 +39,30 @@ namespace TileMadness
         // Update is called once per frame
         void Update()
         {
+            UpdateTime();
+        }
+
+        void UpdateTime()
+        {
             currentTime += Time.deltaTime;
             if (currentTime > allowedTime)
             {
-                currentTime = 0;
-                if (CheckLevelComplete())
-                {
-                    StartNewLevel();
-                }
-                else
-                {
-                    AddError();
-                }
+                EndLevel();
             }
-            timeSlider.value = (allowedTime - currentTime) / (allowedTime);
+            GUIManager.instance.UpdateTimerSlider((allowedTime - currentTime) / (allowedTime));
+        }
+
+        void EndLevel()
+        {
+            currentTime = 0;
+            if (CheckLevelComplete())
+            {
+                StartNewLevel();
+            }
+            else
+            {
+                AddError();
+            }
         }
 
         bool CheckLevelComplete()
@@ -76,7 +83,7 @@ namespace TileMadness
         void StartNewLevel()
         {
             currentLevel++;
-            levelText.text = ""+currentLevel;
+            GUIManager.instance.UpdateCurrentLevelText(currentLevel);
             validTilesLeft = TileManager.Instance.SpawnTileset();
         }
 
@@ -174,5 +181,20 @@ namespace TileMadness
             }
             return true;
         }
+
+        public void PauseGame()
+        {
+
+        }
+        public void LockGame()
+        {
+            Time.timeScale = 0;
+        }
+
+        public void UnlockGame()
+        {
+            Time.timeScale = 1;
+        }
     }
+
 }
