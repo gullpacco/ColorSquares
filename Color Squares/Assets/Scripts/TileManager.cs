@@ -118,7 +118,7 @@ namespace TileMadness
         private void Awake()
         {
             instance = this;
-            //currentSection = sections[0];
+            currentSection = sections[0];
         }
         public void ResetTiles()
         {
@@ -133,6 +133,7 @@ namespace TileMadness
             currentValidTiles = 0;
             ResetTiles();
             ResetBackgroundColors();
+            CheckSectionIncrease();
             if (!tutorialDone)
             {
                 tutorialDone = true;
@@ -146,7 +147,6 @@ namespace TileMadness
             }
             else
             {
-                CheckSectionIncrease();
                 SetBackgroundState();
                 SetBackgrounds();
                 SpawnTiles();
@@ -174,7 +174,8 @@ namespace TileMadness
         {
             if (currentSection.horizontalSplit)
             {
-                return UnityEngine.Random.Range(0, currentSection.tileNumber);
+                int tilesToReturn = UnityEngine.Random.Range(1, currentSection.tileNumber);
+                return tilesToReturn == currentSection.tileNumber ? tilesToReturn - 1 : tilesToReturn;
             }
             else
             {

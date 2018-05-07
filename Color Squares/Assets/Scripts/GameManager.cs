@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 
 namespace TileMadness
@@ -15,6 +16,10 @@ namespace TileMadness
         private static GameManager instance;
         private float allowedTime = 2f;
         private float currentTime;
+        private bool specialTutorial = false;
+        private float specialTime;
+        private float allowedSpecialTime = 5f;
+        private bool gameLocked;
 
         public static GameManager Instance
         {
@@ -44,12 +49,26 @@ namespace TileMadness
 
         void UpdateTime()
         {
-            currentTime += Time.deltaTime;
-            if (currentTime > allowedTime)
+
+            if (specialTutorial)
             {
-                EndLevel();
+                specialTime += Time.unscaledDeltaTime;
+                if (specialTime > allowedSpecialTime)
+                {
+                    GUIManager.instance.HideTutorial(true);
+                    specialTutorial = false;
+                }
+                GUIManager.instance.UpdateTimerSlider((allowedSpecialTime - specialTime) / (allowedSpecialTime));
             }
-            GUIManager.instance.UpdateTimerSlider((allowedTime - currentTime) / (allowedTime));
+            else if (!gameLocked)
+            {
+                currentTime += Time.deltaTime;
+                if (currentTime > allowedTime)
+                {
+                    EndLevel();
+                }
+                GUIManager.instance.UpdateTimerSlider((allowedTime - currentTime) / (allowedTime));
+            }
         }
 
         void EndLevel()
@@ -77,7 +96,16 @@ namespace TileMadness
 
         public void AddError()
         {
+            GameOver();
+        }
+
+        public void GameOver()
+        {
+            LockGame();
             Debug.LogError("Game over");
+            bool isAdReady = AdManager.Instance.IsAdReady();
+            bool isHiScore = SaveManager.Instance.IsHiScore(currentLevel);
+            GUIManager.instance.EnableGameOver(currentLevel, isHiScore, isAdReady);
         }
 
         void StartNewLevel()
@@ -100,7 +128,7 @@ namespace TileMadness
 
         public void CheckValidTile(TileElement tile)
         {
-            if (tile.Color != Color.None)
+            if (!gameLocked && tile.Color != Color.None)
             {
                 switch (TileManager.Instance.BackgroundState)
                 {
@@ -184,17 +212,68 @@ namespace TileMadness
 
         public void PauseGame()
         {
+            LockGame();
+            GUIManager.instance.EnablePausePanel();
+        }
 
+        public void ResumeGame()
+        {
+            GUIManager.instance.DisablePausePanel();
+            UnlockGame();
         }
         public void LockGame()
         {
+            gameLocked = true;
             Time.timeScale = 0;
         }
-
         public void UnlockGame()
         {
+            StartCoroutine(UnlockDelayed());
+        }
+
+        private IEnumerator UnlockDelayed()
+        {
+            yield return new WaitForSecondsRealtime(0.1f);
+            gameLocked = false;
             Time.timeScale = 1;
         }
+        public void SpecialTutorial()
+        {
+            LockGame();
+            specialTutorial = true;
+        }
+        public void ToggleSound()
+        {
+            bool on = true;
+            GUIManager.instance.ToggleSoundSprite(on);
+        }
+        public void ToggleMusic()
+        {
+            bool on = true;
+            GUIManager.instance.ToggleMusicSprite(on);
+        }
+        public void BackToMain()
+        {
+            //TODO load main menu
+            SceneManager.LoadScene("MainMenu");
+        }
+        public void RestartGame()
+        {
+            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        }
+        public void ContinueGame()
+        {
+            AdManager.Instance.ShowAd();
+        }
+        public void OnAdEnd()
+        {
+            GUIManager.instance.EnableResumeAfterAd();
+        }
+        public void ResumeAfterAd()
+        {
+            currentTime = 0;
+            GUIManager.instance.DisableGameOver();
+            UnlockGame();
+        }
     }
-
 }
