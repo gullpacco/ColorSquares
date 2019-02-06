@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "635016997858",
+    "firebase_url": "https://tap-madness.firebaseio.com",
+    "project_id": "tap-madness",
+    "storage_bucket": "tap-madness.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:635016997858:android:26c31612aa07f913",
+        "android_client_info": {
+          "package_name": "com.cggames.tapmadness"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "635016997858-a938f31ok2t02nd0em5upp39k16ka040.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD9-bDpIn82sbWIVZOPDxLo8_suEaXBEv0"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

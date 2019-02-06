@@ -3,29 +3,28 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
-
+using MobileFramework;
 
 namespace TileMadness
 {
     public class GameManager : MonoBehaviour
     {
-
+        static int gamesEnded;
         private float timeLeft;
         private int currentLevel;
         private int validTilesLeft;
         private static GameManager instance;
         private float allowedTime = 2f;
         private float currentTime;
+        bool revived;
         private bool specialTutorial = false;
         private float specialTime;
         private float allowedSpecialTime = 5f;
         private bool gameLocked;
-
         public static GameManager Instance
         {
             get { return instance; }
         }
-
         private void Awake()
         {
             instance = this;
@@ -34,22 +33,18 @@ namespace TileMadness
         {
             get { return currentLevel; }
         }
-
         // Use this for initialization
         void Start()
         {
             StartNewLevel();
         }
-
         // Update is called once per frame
         void Update()
         {
             UpdateTime();
         }
-
         void UpdateTime()
         {
-
             if (specialTutorial)
             {
                 specialTime += Time.unscaledDeltaTime;
@@ -70,12 +65,12 @@ namespace TileMadness
                 GUIManager.instance.UpdateTimerSlider((allowedTime - currentTime) / (allowedTime));
             }
         }
-
         void EndLevel()
         {
             currentTime = 0;
             if (CheckLevelComplete())
             {
+                FirebaseEventsHandler.Instance.FirebaseLevelEventEnd(currentLevel);
                 StartNewLevel();
             }
             else
@@ -83,49 +78,49 @@ namespace TileMadness
                 AddError();
             }
         }
-
         bool CheckLevelComplete()
         {
             return validTilesLeft < 1;
         }
-
         void Pause()
         {
 
         }
-
         public void AddError()
         {
+            FirebaseEventsHandler.Instance.TapTileEvent();
+            FirebaseEventsHandler.Instance.ErrorEvent();
+            gamesEnded++;
+            if(gamesEnded>3)
+            {
+                AdManager.Instance.ShowInterstitial(0);
+            }
             GameOver();
         }
-
         public void GameOver()
         {
             LockGame();
             Debug.LogError("Game over");
-            bool isAdReady = AdManager.Instance.IsAdReady();
+            bool isAdReady = AdManager.Instance.IsRewardedAdLoaded(0) && !revived;
             bool isHiScore = SaveManager.Instance.IsHiScore(currentLevel);
             GUIManager.instance.EnableGameOver(currentLevel, isHiScore, isAdReady);
         }
-
         void StartNewLevel()
         {
             currentLevel++;
             GUIManager.instance.UpdateCurrentLevelText(currentLevel);
             validTilesLeft = TileManager.Instance.SpawnTileset();
         }
-
         void AddValidTile(TileElement tile)
         {
             validTilesLeft--;
             tile.DeSpawn();
+            FirebaseEventsHandler.Instance.TapTileEvent();
         }
-
         void IncreaseLevel()
         {
             currentLevel++;
         }
-
         public void CheckValidTile(TileElement tile)
         {
             if (!gameLocked && tile.Color != Color.None)
@@ -193,7 +188,6 @@ namespace TileMadness
                 }
             }
         }
-
         public bool CheckValidColors(Color tileColor, Color backgroundColor)
         {
             switch (backgroundColor)
@@ -209,13 +203,11 @@ namespace TileMadness
             }
             return true;
         }
-
         public void PauseGame()
         {
             LockGame();
             GUIManager.instance.EnablePausePanel();
         }
-
         public void ResumeGame()
         {
             GUIManager.instance.DisablePausePanel();
@@ -230,7 +222,6 @@ namespace TileMadness
         {
             StartCoroutine(UnlockDelayed());
         }
-
         private IEnumerator UnlockDelayed()
         {
             yield return new WaitForSecondsRealtime(0.1f);
@@ -254,26 +245,44 @@ namespace TileMadness
         }
         public void BackToMain()
         {
-            //TODO load main menu
             SceneManager.LoadScene("MainMenu");
         }
         public void RestartGame()
         {
+            if (gamesEnded > 3)
+            {
+                AdManager.Instance.HideInterstitial(0);
+                gamesEnded = 0;
+            }
             SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
         }
         public void ContinueGame()
         {
-            AdManager.Instance.ShowAd();
-        }
-        public void OnAdEnd()
-        {
-            GUIManager.instance.EnableResumeAfterAd();
+            if (gamesEnded > 3)
+            {
+                AdManager.Instance.HideInterstitial(0);
+                gamesEnded = 0;
+            }
+            FirebaseEventsHandler.Instance.ReviveRequestEvent();
+            StartCoroutine(WaitForAdToClose());
+            AdManager.Instance.ShowRewardedAds(0);
         }
         public void ResumeAfterAd()
         {
+            FirebaseEventsHandler.Instance.ReviveCompletedEvent();
+            revived = true;
             currentTime = 0;
             GUIManager.instance.DisableGameOver();
             UnlockGame();
         }
+        IEnumerator WaitForAdToClose()
+        {
+            yield return new WaitUntil(() => AdManager.Instance.IsRewardedAdClosed(0));
+            if (AdManager.Instance.IsRewardedAdRewarded(0))
+            {
+                ResumeAfterAd();
+            }
+        }
+
     }
 }

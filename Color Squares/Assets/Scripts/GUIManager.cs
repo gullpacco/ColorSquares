@@ -150,21 +150,22 @@ namespace TileMadness
             {
                 gameOverContinueButton.gameObject.SetActive(false);
             }
+            else
             {
                 gameOverContinueButton.gameObject.SetActive(true);
             }
         }
         public void DisableGameOver()
         {
-            gameOverResumeButton.gameObject.SetActive(false);
-            gameOverContinueButton.gameObject.SetActive(true);
+            //gameOverResumeButton.gameObject.SetActive(false);
+            //gameOverContinueButton.gameObject.SetActive(true);
             gameOverPanel.SetActive(false);
         }
 
-        public void EnableResumeAfterAd()
-        {
-            gameOverResumeButton.gameObject.SetActive(true);
-            gameOverContinueButton.gameObject.SetActive(false);
-        }
+        //public void EnableResumeAfterAd()
+        //{
+        //    gameOverResumeButton.gameObject.SetActive(true);
+        //    gameOverContinueButton.gameObject.SetActive(false);
+        //}
     }
 }
