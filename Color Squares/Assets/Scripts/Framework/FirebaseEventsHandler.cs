@@ -22,13 +22,29 @@ namespace MobileFramework
             DontDestroyOnLoad(this);
         }
         #region Custom events
-        public void TapTileEvent()
+        public void TapTileEvent(/*string color*/)
         {
             if (firebaseManager.IsFirebaseReady())
             {
                 FirebaseAnalytics.LogEvent("Tap");
+                //FirebaseAnalytics.LogEvent("Tap", "Color", color);
             }
         }
+        public void TutorialComplete(int index)
+        {
+            if (firebaseManager.IsFirebaseReady())
+            {
+                FirebaseAnalytics.LogEvent("Tutorial Done","Tutorial Index", index);
+                //FirebaseAnalytics.LogEvent("Tap", "Color", color);
+            }
+        }
+        //public void SpawnTileEvent(string color)
+        //{
+        //    if (firebaseManager.IsFirebaseReady())
+        //    {
+        //        FirebaseAnalytics.LogEvent("Spawn", "Color", color);
+        //    }
+        //}
         public void ErrorEvent()
         {
             if (firebaseManager.IsFirebaseReady())

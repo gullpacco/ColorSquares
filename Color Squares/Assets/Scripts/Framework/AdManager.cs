@@ -274,6 +274,9 @@ namespace MobileFramework
             }
             DontDestroyOnLoad(this);
             instance = this;
+        }
+        private void Start()
+        {
             Init();
         }
         public void Init()

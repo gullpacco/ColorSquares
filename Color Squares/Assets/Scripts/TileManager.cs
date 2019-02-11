@@ -127,7 +127,14 @@ namespace TileMadness
                 tiles[i].DeSpawn();
             }
         }
-
+        public void CheckTutorialCompleted()
+        {
+            if (!tutorialDone)
+            {
+                MobileFramework.FirebaseEventsHandler.Instance.TutorialComplete(currentSection.tutorialIndex);
+                SaveManager.Instance.SetTutorialDone(currentSection.tutorialIndex);
+            }
+        }
         public int SpawnTileset()
         {
             currentValidTiles = 0;
@@ -161,7 +168,7 @@ namespace TileMadness
                 if (GameManager.Instance.CurrentLevel > sections[currentSectionIndex + 1].minLevel)
                 {
                     currentSectionIndex++;
-                    if (sections[currentSectionIndex].tutorialIndex != -1)
+                    if (sections[currentSectionIndex].tutorialIndex > SaveManager.Instance.LastTutorialDone())
                     {
                         tutorialDone = false;
                     }

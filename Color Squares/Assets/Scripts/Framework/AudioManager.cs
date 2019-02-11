@@ -10,12 +10,10 @@ public class AudioManager : MonoBehaviour
     static AudioManager instance;
     public AudioSource music;
     public AudioClip[] sounds;
-
     public static AudioManager Instance
     {
         get { return instance; }
     }
-
     private void Awake()
     {
         if (Instance != null)
@@ -26,7 +24,6 @@ public class AudioManager : MonoBehaviour
         DontDestroyOnLoad(gameObject);
         instance = this;
     }
-
     public void PlaySound(int soundIndex)
     {
         if (soundOn)
@@ -37,16 +34,13 @@ public class AudioManager : MonoBehaviour
             }
         }
     }
-
-    public bool ToggleSound()
+    public void ToggleSound(bool on)
     {
-        soundOn = !soundOn;
-        return soundOn;
+        soundOn = on;
     }
-
-    public bool ToggleMusic()
+    public void ToggleMusic(bool on)
     {
-        musicOn = !musicOn;
+        musicOn = on;
         if (!musicOn)
         {
             music.Pause();
@@ -55,14 +49,11 @@ public class AudioManager : MonoBehaviour
         {
             music.UnPause();
         }
-        return musicOn;
     }
-
     public void LoadSound(bool state)
     {
         soundOn = state;
     }
-
     public void LoadMusic(bool state)
     {
         musicOn = state;
@@ -75,6 +66,4 @@ public class AudioManager : MonoBehaviour
             music.UnPause();
         }
     }
-
-
 }

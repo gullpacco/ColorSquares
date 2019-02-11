@@ -17,8 +17,6 @@ namespace TileMadness
         public Text gameOverScore;
         public Text hiScore;
         public Text newBestScore;
-       
-
         [Header("Panels")]
         public GameObject gameOverPanel;
         public GameObject pausePanel;
@@ -39,13 +37,10 @@ namespace TileMadness
         [Header("Other Elements")]
         public Slider timerSlider;
         public Image tutorialBakgroundPanel;
-
-
         private void Awake()
         {
             instance = this;
         }
-
         public void ShowTutorial(string _tutorialText, Color backgroundColor, Color continueColor)
         {
             pauseButton.SetActive(false);
@@ -78,8 +73,6 @@ namespace TileMadness
             }
             tutorialContinueButton.image.sprite = TileManager.Instance.tileSprites[(int)continueColor];
         }
-
-
         public void HideTutorial(bool tutorialEnded = false)
         {
             pauseButton.SetActive(true);
@@ -95,43 +88,67 @@ namespace TileMadness
                 GameManager.Instance.UnlockGame();
             }
         }
-
         public void UpdateTimerSlider(float time)
         {
             timerSlider.value = time;
         }
-
         public void UpdateCurrentLevelText(int levelNumber)
         {
             currentLevelText.text = "" + levelNumber;
         }
-
         public void EnablePausePanel()
         {
+            AudioManager.Instance.PlaySound(2);
+            UpdateMusicSprites(SaveManager.Instance.MusicOn);
+            UpdateSoundSprites(SaveManager.Instance.SoundOn);
             pausePanel.SetActive(true);
             timerSlider.gameObject.SetActive(false);
             pauseButton.SetActive(false);
         }
-
         public void DisablePausePanel()
         {
             pausePanel.SetActive(false);
             timerSlider.gameObject.SetActive(true);
             pauseButton.SetActive(true);
         }
-
-        public void ToggleSoundSprite(bool on)
+        public void ToggleSound()
         {
-            soundButton.image.sprite = on ? soundOnSprite : soundOffSprite;
+            bool state = SaveManager.Instance.ToggleSound();
+            UpdateSoundSprites(state);
+            AudioManager.Instance.PlaySound(2);
         }
-        public void ToggleMusicSprite(bool on)
+        public void ToggleMusic()
         {
-            musicButton.image.sprite = on ? musicOnSprite : musicOffSprite;
+            AudioManager.Instance.PlaySound(2);
+            bool state = SaveManager.Instance.ToggleMusic();
+            UpdateMusicSprites(state);
         }
-
+        void UpdateMusicSprites(bool state)
+        {
+            if (state)
+            {
+                musicButton.image.sprite = musicOnSprite;
+            }
+            else
+            {
+                musicButton.image.sprite = musicOffSprite;
+            }
+        }
+        void UpdateSoundSprites(bool state)
+        {
+            if (state)
+            {
+                soundButton.image.sprite = soundOnSprite;
+            }
+            else
+            {
+                soundButton.image.sprite = soundOffSprite;
+            }
+        }
         public void EnableGameOver(int score, bool isHiScore, bool canContinue)
         {
             gameOverPanel.SetActive(true);
+            pauseButton.SetActive(false);
             if (isHiScore)
             {
                 //TODO implement hi score
@@ -157,11 +174,9 @@ namespace TileMadness
         }
         public void DisableGameOver()
         {
-            //gameOverResumeButton.gameObject.SetActive(false);
-            //gameOverContinueButton.gameObject.SetActive(true);
             gameOverPanel.SetActive(false);
+            pauseButton.SetActive(true);
         }
-
         //public void EnableResumeAfterAd()
         //{
         //    gameOverResumeButton.gameObject.SetActive(true);

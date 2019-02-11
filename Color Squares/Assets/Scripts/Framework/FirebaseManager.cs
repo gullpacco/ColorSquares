@@ -11,8 +11,6 @@ namespace MobileFramework
         public enum FirebaseEvents { Login }
         FirebaseApp FirebaseApp;
         bool Initialized;
-
-
         private void Awake()
         {
             Init();
@@ -43,7 +41,6 @@ namespace MobileFramework
                 }
             });
         }
-
         public bool IsFirebaseReady()
         {
             if (Initialized)
@@ -57,5 +54,4 @@ namespace MobileFramework
             }
         }
     }
-
 }

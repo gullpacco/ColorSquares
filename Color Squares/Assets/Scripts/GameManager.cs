@@ -36,6 +36,7 @@ namespace TileMadness
         // Use this for initialization
         void Start()
         {
+            SaveManager.Instance.IncreaseGamesPlayed();
             StartNewLevel();
         }
         // Update is called once per frame
@@ -70,7 +71,8 @@ namespace TileMadness
             currentTime = 0;
             if (CheckLevelComplete())
             {
-                FirebaseEventsHandler.Instance.FirebaseLevelEventEnd(currentLevel);
+                SaveManager.Instance.IncreaseLevelsCompleted();
+                               FirebaseEventsHandler.Instance.FirebaseLevelEventEnd(currentLevel);
                 StartNewLevel();
             }
             else
@@ -88,6 +90,7 @@ namespace TileMadness
         }
         public void AddError()
         {
+            AudioManager.Instance.PlaySound(0);
             FirebaseEventsHandler.Instance.TapTileEvent();
             FirebaseEventsHandler.Instance.ErrorEvent();
             gamesEnded++;
@@ -107,12 +110,18 @@ namespace TileMadness
         }
         void StartNewLevel()
         {
+            TileManager.Instance.CheckTutorialCompleted();
             currentLevel++;
+            if (SaveManager.Instance.IsHiScore(currentLevel))
+            {
+                //TODO CALL LEADERBOARD
+            }
             GUIManager.instance.UpdateCurrentLevelText(currentLevel);
             validTilesLeft = TileManager.Instance.SpawnTileset();
         }
         void AddValidTile(TileElement tile)
         {
+            AudioManager.Instance.PlaySound(1);
             validTilesLeft--;
             tile.DeSpawn();
             FirebaseEventsHandler.Instance.TapTileEvent();
@@ -125,6 +134,7 @@ namespace TileMadness
         {
             if (!gameLocked && tile.Color != Color.None)
             {
+                SaveManager.Instance.IncreaseTapCount(tile.Color.ToString());
                 switch (TileManager.Instance.BackgroundState)
                 {
                     case BackGroundState.Full:
@@ -233,22 +243,14 @@ namespace TileMadness
             LockGame();
             specialTutorial = true;
         }
-        public void ToggleSound()
-        {
-            bool on = true;
-            GUIManager.instance.ToggleSoundSprite(on);
-        }
-        public void ToggleMusic()
-        {
-            bool on = true;
-            GUIManager.instance.ToggleMusicSprite(on);
-        }
         public void BackToMain()
         {
+            AudioManager.Instance.PlaySound(2);
             SceneManager.LoadScene("MainMenu");
         }
         public void RestartGame()
         {
+            AudioManager.Instance.PlaySound(2);
             if (gamesEnded > 3)
             {
                 AdManager.Instance.HideInterstitial(0);
@@ -258,6 +260,7 @@ namespace TileMadness
         }
         public void ContinueGame()
         {
+            AudioManager.Instance.PlaySound(2);
             if (gamesEnded > 3)
             {
                 AdManager.Instance.HideInterstitial(0);
@@ -283,6 +286,5 @@ namespace TileMadness
                 ResumeAfterAd();
             }
         }
-
     }
 }
