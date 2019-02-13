@@ -9,6 +9,7 @@ public class MainMenuManager : MonoBehaviour
 {
     public Image soundImage;
     public Image musicImage;
+    public GameObject creditsPanel;
     public Sprite soundOnSprite;
     public Sprite soundOffSprite;
     public Sprite musicOnSprite;
@@ -62,9 +63,16 @@ public class MainMenuManager : MonoBehaviour
         FirebaseEventsHandler.Instance.GameStartedEvent();
         SceneManager.LoadScene("Main");
     }
+    public void ShowCredits()
+    {
+        creditsPanel.SetActive(true);
+    }
+    public void HideCredits()
+    {
+        creditsPanel.SetActive(false);
+    }
     public void Rate()
     {
         AudioManager.Instance.PlaySound(2);
-
     }
 }
